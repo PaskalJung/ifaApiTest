@@ -1,10 +1,23 @@
 Simple Node Server including CRUD 
 
+## Install
+
+install NodeJS:<br/>
+https://nodejs.org/en/download/
+
+install Postman:<br/>
+https://www.postman.com/downloads/
+
 ## Get started
 
-npm install
+Install packages in file package.json: <br/>
+command: npm install<br/>
 
-modify code for your environment in file : server.js
+Modify code for your environment in file : .env<br/>
+
+Start the NodeJs Server<br/>
+command: node server.js<br/>
+command: nodemon server.js --watch<br/>
 
 ## Packages 
 
@@ -14,5 +27,3 @@ modify code for your environment in file : server.js
 "mongodb": "^2.2.30",
 "mongoose": "^4.11.4",
 "nodemon": "^1.11.0",
-"socket.io": "^2.0.3"
-
