@@ -1,4 +1,4 @@
-var eleveJsonSchema = [
+var plantJson = [
     {
         "_id": "5f26cf7c4290a047f50de001", 
         "plante": "Aubergine", 
@@ -106,4 +106,4 @@ var eleveJsonSchema = [
   
 ]
 
-module.exports = eleveJsonSchema;
+module.exports = plantJson;

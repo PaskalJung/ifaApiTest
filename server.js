@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var JSONFILE = require('./models/jsonFile.js');
+var JSONMODEL = require('./models/jsonModel.js');
 var app = express();
 require('dotenv').config() // console.log(process.env)
 
@@ -15,11 +16,14 @@ app.use(bodyParser.urlencoded({
 // prends en charge les requetes du type ("Content-type", "application/json")
 app.use(bodyParser.json());
 
+// prends en charge un dossier public
+app.use(express.static(__dirname + '/public'));
+
 // Add headers to allow CORS
 app.use(function (req, res, next) {
 
     // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', process.env.AUTHORIZED_ROOT_URL + ':' + process.env.AUTHORIZED_PORT);
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     // Request methods you wish to allow
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -49,6 +53,11 @@ app.get('/', function(req, res) {
 // GET send jsonFile.html
 app.get('/json-file', function(req, res) {
     return res.sendFile(__dirname + '/client/json-file.html')
+});
+
+// GET send database.html
+app.get('/database', function(req, res) {
+    return res.sendFile(__dirname + '/client/database.html')
 });
 
 // GET send 404.html
@@ -92,7 +101,7 @@ app.get('/api/json-file/index/:id', function(req, res) {
     }
 });
 
-// POST send post test
+// POST test json file
 app.post('/api/json-file/post/test', function(req, res) {
     console.log("body", req.body);
     res.status(200).json(req.body);
@@ -161,6 +170,138 @@ app.delete('/api/json-file/delete/:id', function(req, res) {
 
 
 
+/*
+ * DB
+ */
+
+// GET list database
+app.get('/api/db/list', function(req, res) {
+    
+    JSONMODEL.find({}, function(err, collection) {
+        if (err) {
+            console.log("err", err);
+            return res.status(404).json({error: 'plants not found - status 404'})
+        } else {
+            return res.status(200).json(collection);
+        }
+    }).sort({_id: 1});
+
+});
+
+// GET index by _id in database
+app.get('/api/db/index/:id', function(req, res) {
+    
+    JSONMODEL.find({_id: req.params.id}, function(err, collection) {
+        if (err) {
+            console.log("err", err);
+            return res.status(404).json({error: 'plant id ' + req.params.id + ' not found - status 404'})
+        }
+
+        if (collection.length == 0) {
+            console.log("!collection", err);
+            return res.status(404).json({error: 'plant id ' + req.params.id + ' not found - status 404'})
+        }
+         else {
+            console.log("collection", collection);
+            return res.status(200).json(collection);
+        }
+    });
+
+});
+
+// POST add in database
+app.post('/api/db/add', function(req, res) {
+    
+    console.log("body", req.body);
+
+    var search = JSONMODEL.find({_id: req.params.id})
+
+    var plantToSave = new JSONMODEL(req.body);
+    plantToSave.save(function(err, success){
+        if(err){
+
+            console.log(err);
+            return res.status(200).json(err);
+        }
+        else{
+            console.log(success);
+            return res.status(200).json(success);
+
+        }
+    });
+    
+});
+
+// PUT update by _id in database
+app.put('/api/db/update/:id', function(req, res) {
+    
+    console.log("id", req.params.id);
+    console.log("body", req.body);
+
+    JSONMODEL.findByIdAndUpdate(req.params.id,req.body, { new: true }, function (err, updatedJsonFile) {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({error: 'plant id ' + req.params.id + ' not found - status 500'})
+      }
+      else {
+        console.log(updatedJsonFile);
+        return res.status(200).send(updatedJsonFile);
+      }
+      
+    });
+
+});
+
+// DELETE delete by _id in database
+app.delete('/api/db/delete/:id', function(req, res) {
+
+    console.log("id", req.params.id);
+
+    JSONMODEL.findByIdAndRemove(req.params.id, function(err, response){
+        if(err){
+            console.log(err);
+            return res.status(500).json({error: 'plant id ' + req.params.id + ' not found - status 500'})
+        }
+        else{
+            if(response == null) {
+                return res.status(404).json({error: 'plant id ' + req.params.id + ' not found - status 404'})
+            }
+            else {
+                console.log(response);
+                console.log("deleted");
+                res.status(200).json({deleted_id:  req.params.id});
+            }
+            
+        }
+    });
+});
+
+// GET add collection in database
+app.get('/api/db/collection/add', function(req, res) {
+    
+    console.log("JSONFILE", JSONFILE);
+
+    JSONFILE.forEach( (newPlant, index) => {
+
+        var plantToSave = new JSONMODEL(newPlant);
+
+        plantToSave.save(function(err, success){
+            if(err){
+                return console.log(err);
+            }
+            else{
+                console.log(success);
+            }
+        });
+
+        if( index == JSONFILE.length ) {
+            return res.status(200).json(success);
+        }
+    })
+
+});
+
+
 // FUNCTION
 function setServer() {
   
@@ -173,28 +314,18 @@ function setServer() {
       () => {
           console.log("");
           console.log('DATABASE is connected on this url: ' + process.env.MONGO_HOST);
-  
           app.listen(process.env.SERVER_PORT, () => {
-            console.log('SERVER is listening on port: ' + process.env.ROOT_URL + ':' + process.env.SERVER_PORT);
-            
+            console.log(" ");
+            console.log("------- ");
+            console.log('SERVER is listening on url: ' + process.env.ROOT_URL + ':' + process.env.SERVER_PORT);
+            console.log(" ");
+            console.log("------- ");
             console.log('SERVER ENV: ');
             console.log(' - ROOT_URL:' + process.env.ROOT_URL);
             console.log(' - SERVER_PORT:' + process.env.SERVER_PORT);
-            console.log(" ");
-            console.log("------- ");
-            console.log(" ");
-            console.log('AUTHORIZED: ');
-            console.log(' - AUTHORIZED_ROOT_URL:' + process.env.AUTHORIZED_ROOT_URL);
-            console.log(' - AUTHORIZED_PORT:' + process.env.AUTHORIZED_PORT);
-            console.log(" ");
+            
+            
   
-            // SERVER PARAAMETERS
-            // app.use(bodyParser.urlencoded({
-            //   extended: true
-            // }));
-            // app.use(bodyParser());
-            // // "Content-type", "application/json"
-            // app.use(bodyParser.json());
           });
           
           
