@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
+const morgan = require('morgan');
 var JSONFILE = require('./models/jsonFile.js');
 var JSONMODEL = require('./models/jsonModel.js');
 var app = express();
@@ -8,10 +9,20 @@ require('dotenv').config() // console.log(process.env)
 
 setServer()
 
+app.use(morgan('dev'));  
+// app.use('/', morgan('dev'));
+
+// app.use(function(req, res, next) {
+//     console.log(req.url)
+//     next()
+// })
+   
+
 // prends en charge les requetes du type ("Content-type", "application/x-www-form-urlencoded")
 app.use(bodyParser.urlencoded({
     extended: true
-}));
+}))
+
 
 // prends en charge les requetes du type ("Content-type", "application/json")
 app.use(bodyParser.json());
@@ -47,22 +58,22 @@ app.use(function (req, res, next) {
 
 // GET send index.html
 app.get('/', function(req, res) {
-    return res.sendFile(__dirname + '/client/index.html')
+    return res.status(200).sendFile(__dirname + '/client/index.html')
 });
 
 // GET send jsonFile.html
 app.get('/json-file', function(req, res) {
-    return res.sendFile(__dirname + '/client/json-file.html')
+    return res.status(200).sendFile(__dirname + '/client/json-file.html')
 });
 
 // GET send database.html
 app.get('/database', function(req, res) {
-    return res.sendFile(__dirname + '/client/database.html')
+    return res.status(200).sendFile(__dirname + '/client/database.html')
 });
 
 // GET send 404.html
 app.get('/404', function(req, res) {
-    return res.status(404).sendFile(__dirname + '/client/404.html')
+    return res.status(200).status(404).sendFile(__dirname + '/client/404.html')
 });
 
 /*
